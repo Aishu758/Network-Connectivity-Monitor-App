@@ -1,0 +1,17 @@
+package com.network.networkmonitor;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+
+@SpringBootApplication
+@EnableScheduling
+public class NetworkmonitorApplication {
+
+
+	    public static void main(String[] args) {
+		SpringApplication.run(NetworkmonitorApplication.class, args);
+	}
+
+}
