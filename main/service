@@ -1,0 +1,109 @@
+package com.network.networkmonitor.service;
+
+import com.network.networkmonitor.model.NetworkLog;
+import com.network.networkmonitor.repo.NetworkRepo;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Service
+public class NetworkService {
+
+    private final NetworkRepo repo;
+    private boolean lastStatus = true;
+
+    public NetworkService(NetworkRepo repo) {
+        this.repo = repo;
+    }
+
+    @Scheduled(fixedRate = 5000)
+    public void checkConnection() {
+        boolean isConnected = isAnyNetworkAvailable();
+        String ipAddress = getLocalIpAddress();
+        String networkType = getNetworkType();
+        Integer signalStrength = getSignalStrength(networkType);
+        String statusMessage;
+
+        if (isConnected != lastStatus) {
+            statusMessage = isConnected ? "Connection restored" : "Connection lost";
+            lastStatus = isConnected;
+        } else {
+            statusMessage = isConnected ? "Connected" : "Disconnected";
+        }
+
+        NetworkLog log = new NetworkLog(
+                isConnected,
+                LocalDateTime.now(),
+                ipAddress,
+                networkType,
+                signalStrength,
+                statusMessage
+        );
+        repo.save(log);
+    }
+
+    private boolean isAnyNetworkAvailable() {
+        // ✅ Multiple targets: mix of domain names and public DNS IPs
+        String[] targets = {
+            "google.com",         // DNS check + connectivity
+            "8.8.8.8",            // Google DNS (IP only)
+            "1.1.1.1",            // Cloudflare DNS (IP only)
+            "208.67.222.222",     // OpenDNS (IP only)
+            "cloudflare.com",     // Reliable domain
+            "example.com"         // Testing domain (IANA)
+        };
+
+        for (String target : targets) {
+            try {
+                Process p = Runtime.getRuntime().exec("ping -n 1 " + target);
+                int exitCode = p.waitFor();
+                if (exitCode == 0) {
+                    return true;
+                }
+            } catch (Exception ignored) {}
+        }
+        return false;
+    }
+
+    private String getLocalIpAddress() {
+        try {
+            return java.net.InetAddress.getLocalHost().getHostAddress();
+        } catch (Exception e) {
+            return "Unknown";
+        }
+    }
+
+    private String getNetworkType() {
+        return "WiFi"; // Simplified logic (you can enhance later)
+    }
+
+    private Integer getSignalStrength(String networkType) {
+        if ("WiFi".equals(networkType)) {
+            try {
+                Process p = Runtime.getRuntime().exec("netsh wlan show interfaces");
+                BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.trim().startsWith("Signal")) {
+                        String[] parts = line.split(":");
+                        String percentStr = parts[1].trim().replace("%", "");
+                        return Integer.parseInt(percentStr);
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+        return null;
+    }
+
+    public String getLatestStatusSummary() {
+        Optional<NetworkLog> latestLogOpt = repo.findAll().stream()
+                .reduce((first, second) -> second);
+        return latestLogOpt.map(log -> String.format("Status: %s\nIP: %s\nTime: %s",
+                log.getStatusMessage(), log.getIpAddress(), log.getTimestamp().toString()))
+                .orElse("No logs available.");
+    }
+}
