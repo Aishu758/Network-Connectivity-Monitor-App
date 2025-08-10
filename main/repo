@@ -1,0 +1,7 @@
+package com.network.networkmonitor.repo;
+
+import com.network.networkmonitor.model.NetworkLog;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface NetworkRepo extends JpaRepository<NetworkLog, Long> {
+}
