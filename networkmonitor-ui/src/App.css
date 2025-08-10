@@ -1,0 +1,33 @@
+body {
+  background-color: #f5c5eb !important;   /* nude shade background */
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  padding: 20px;
+}
+
+h2 {
+  text-align: center !important;
+  color: #333 !important;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background: #fff !important;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8) !important;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+th {
+  background-color: #007bff !important;
+  color: white !important;
+}
