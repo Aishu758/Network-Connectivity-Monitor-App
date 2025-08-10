@@ -1,0 +1,33 @@
+package com.network.networkmonitor.controller;
+
+import com.network.networkmonitor.model.NetworkLog;
+import com.network.networkmonitor.repo.NetworkRepo;
+
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/logs")
+@CrossOrigin(origins = {"http://localhost:3000","http://localhost:63706","https://localhost:3000",
+    "https://localhost:63706"})
+public class NetworkController {
+    private final NetworkRepo repo;
+
+    public NetworkController(NetworkRepo repo) {
+        this.repo = repo;
+    }
+
+    @GetMapping
+    public List<NetworkLog> getAllLogs() {
+        return repo.findAll();
+    }
+
+    @GetMapping("/latest")
+    public NetworkLog getLatestLog() {
+        return repo.findAll()
+            .stream()
+            .reduce((first, second) -> second) // get last
+            .orElse(null);
+    }
+}
